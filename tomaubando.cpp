@@ -1,10 +1,11 @@
 #include <bits/stdc++.h>
 using namespace std;
-#define MAXN 100
+
 #define MAX_REGION 100
 #define NO_COLOR 0
 #define MAX_COLOR 3
 
+#define MAXN 100
 typedef struct {
 	int A[MAXN][MAXN];
 	int n;
@@ -87,7 +88,7 @@ typedef vector<int>::iterator VectorIndex;
 vector<int> getAvailableValues(int id, Constrains* constrain, Map map){
 	vector<int> posList = getConstrains(constrain, id);
 	
-	int availables[MAX_COLOR];
+	int availables[MAX_COLOR+1];
 	for (int i = 1; i <= MAX_COLOR; i++) availables[i] = 1;
 	
 	for (VectorIndex it = posList.begin(); it != posList.end(); it++){
@@ -140,7 +141,7 @@ int backTracking(Map *map){
 
 Map solveMap(Map map){
 	exploredCounter = 0;
-	if (backTracking(&map)) printf("Sovled\n");
+	if (backTracking(&map)) printf("Solved\n");
 	else printf("Can not solved!\n");
 	printf("Explored counter: %d\n", exploredCounter);
 	return map;
