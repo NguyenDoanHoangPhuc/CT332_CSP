@@ -1411,23 +1411,212 @@ var list_map = [
 
 ]
 
+var minimumColors = [
+	3,
+	4,
+	5,
+	5,
+	5
+]
+
+function createAdjacencyMatrix() {
+    const paths = document.querySelectorAll('.map path');
+    const matrix = Array.from({ length: paths.length }, () => Array(paths.length).fill(0));
+
+    paths.forEach((path, index) => {
+        for (let i = index + 1; i < paths.length; i++) {
+            if (arePathsNear(path, paths[i])) {
+                matrix[index][i] = 1;
+                matrix[i][index] = 1; // Since the adjacency matrix is symmetric
+            }
+        }
+    });
+    return matrix;
+}
+
+function saveMatrixToFile(matrix, name) {
+    const blob = new Blob([JSON.stringify(matrix)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'adjacency_matrix_' + name + '.json';
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+function isMapFullyColored() {
+    const mapPaths = document.querySelectorAll('.map path');
+    const defaultColor = 'rgb(204, 204, 204)';
+
+    for (let path of mapPaths) {
+        if (window.getComputedStyle(path).fill === defaultColor) {
+            return false;
+        }
+    }
+    return true;
+}
+
+function arePathsNear(path1, path2, threshold = 5) {
+    if (!path1 || !path2) {
+        return false;
+    }
+
+    // Hàm để chuyển dữ liệu path thành một danh sách các điểm (x, y)
+    function getPathPoints(path) {
+        const length = path.getTotalLength();
+        const numPoints = Math.ceil(length / 2); // Số lượng điểm cần lấy (tăng hoặc giảm nếu cần)
+        const points = [];
+
+        for (let i = 0; i <= numPoints; i++) {
+            const point = path.getPointAtLength((i / numPoints) * length);
+            points.push({ x: point.x, y: point.y });
+        }
+
+        return points;
+    }
+
+    // Hàm để tính khoảng cách Euclidean giữa hai điểm
+    function getDistance(point1, point2) {
+        const dx = point1.x - point2.x;
+        const dy = point1.y - point2.y;
+        return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    const points1 = getPathPoints(path1);
+    const points2 = getPathPoints(path2);
+
+    // Kiểm tra khoảng cách giữa các điểm
+    for (const p1 of points1) {
+        for (const p2 of points2) {
+            if (getDistance(p1, p2) < threshold) {
+                return true; // Hai path được coi là kề nhau
+            }
+        }
+    }
+
+    return false; // Không có điểm nào gần nhau
+}
+
+// function arePathsNear(path1, path2) {
+//     if (!path1 || !path2) {
+//         return false;
+//     }
+
+//     const rect1 = path1.getBoundingClientRect();
+//     const rect2 = path2.getBoundingClientRect();
+
+//     const isNear = !(rect1.right < rect2.left ||
+//         rect1.left > rect2.right ||
+//         rect1.bottom < rect2.top ||
+//         rect1.top > rect2.bottom);
+
+//     return isNear;
+// }
+
+updateColorNumber(0);
+
+function updateColorNumber(number) {
+	document.getElementById('color-text').textContent = `Số màu hiện tại: ${number}`;
+}
+
+
+function logNearbyPaths(index) {
+    const paths = document.querySelectorAll('.map path');
+    let logContent = '';
+
+    const maxIndex = paths.length;
+    logContent += `${maxIndex}\n\n`;
+
+    paths.forEach((path, index) => {
+        for (let i = index + 1; i < paths.length; i++) {
+            if (arePathsNear(path, paths[i])) {
+                logContent += `${index + 1} ${i + 1}\n`;
+            }
+        }
+    });
+
+    const blob = new Blob([logContent], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `test${index}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+function applyColorsFromFile(index) {
+    let filename = `result_${index}.txt`;
+    fetch(filename)
+        .then(response => response.text())
+        .then(data => {
+            const lines = data.trim().split('\n');
+            const colors = [
+				'rgb(86, 0, 139)',
+				'rgb(33, 0, 100)',
+				'rgb(0, 71, 64)',
+				'rgb(0, 139, 23)',
+				'rgb(142, 128, 0)',
+				'rgb(141, 82, 0)',
+				'rgb(139, 0, 0)',
+			]; 
+
+			function shuffle(array) {
+				for (let i = array.length - 1; i > 0; i--) {
+					const j = Math.floor(Math.random() * (i + 1));
+					[array[i], array[j]] = [array[j], array[i]];
+				}
+			}
+
+			shuffle(colors);
+
+			let maxColorNumber = 0;
+
+			lines.forEach(line => {
+				const [index, colorNumber] = line.split(' ').map(Number);
+				if (colorNumber > maxColorNumber) {
+					maxColorNumber = colorNumber;
+				}
+				const path = document.getElementById(index.toString());
+				if (path && colors[colorNumber - 1]) {
+					path.style.fill = colors[colorNumber - 1];
+				}
+			});
+
+			updateColorNumber(maxColorNumber);
+
+			
+        })
+        .catch(error => console.error('Error reading the file:', error));
+}
+
+// 
 document.querySelectorAll('.map-choose li').forEach((li, index) => {
     li.addEventListener('click', () => {
         document.querySelector('.map').innerHTML = list_map[index];
+		updateColorNumber(0);
+		document.querySelectorAll('.map-choose li').forEach(li => {
+			li.style.textDecoration = 'none';
+		});
+		li.style.textDecoration = 'underline';
         const mapElement = document.querySelector('.map');
         if (index === 0) {
             mapElement.setAttribute('id', 'wrapper');
-            mapElement.setAttribute('viewBox', '0 0 1000 931.4');
-            mapElement.setAttribute('preserveAspectRatio', 'xMinYMin');
-            mapElement.setAttribute('height', '931.4');
-            mapElement.setAttribute('width', '1000');
+            mapElement.setAttribute('viewBox', '0 0 650 860');
+            mapElement.setAttribute('preserveAspectRatio', 'xMinYMin meet');
+            mapElement.setAttribute('height', '650');
+            mapElement.setAttribute('width', '860');
             mapElement.style.backgroundColor = 'rgb(255, 255, 255)';
         } else {
             mapElement.setAttribute('viewBox', '0 0 800 900');
-            mapElement.removeAttribute('id');
-            mapElement.removeAttribute('preserveAspectRatio');
-            mapElement.removeAttribute('height');
-            mapElement.removeAttribute('width');
+            // mapElement.removeAttribute('id');
+            // mapElement.removeAttribute('preserveAspectRatio');
+			mapElement.setAttribute('preserveAspectRatio', 'xMidYMin');
+			mapElement.setAttribute('height', '800');
+            mapElement.setAttribute('width', '860');
+            // mapElement.removeAttribute('height');
+            // mapElement.removeAttribute('width');
             mapElement.style.backgroundColor = '';
         }
         localStorage.setItem('selectedIndex', index);
@@ -1479,9 +1668,22 @@ document.querySelectorAll('.map-choose li').forEach((li, index) => {
 
                 if (canChangeColor) {
                     path.style.fill = selectedColor;
+					// Store the number of different colors used in localStorage
+					let usedColors = JSON.parse(localStorage.getItem('usedColors')) || [];
+					if (!usedColors.includes(selectedColor)) {
+						usedColors.push(selectedColor);
+						localStorage.setItem('usedColors', JSON.stringify(usedColors));
+						updateColorNumber(usedColors.length);
+					}
+
                     if (isMapFullyColored()) {
                         setTimeout(() => {
-                            alert('The map is fully colored!');
+							if (usedColors.length <= minimumColors[storedIndex]) {
+								alert('Bản đồ đã được tô màu thành công với số màu ít nhất!');
+							}
+							else {
+								alert('Bản đồ đã được tô màu thành công, nhưng số màu ít nhất có thể tô là ' + minimumColors[storedIndex]);
+							}
                         }, 0);
                     }
                 } else {
@@ -1495,198 +1697,48 @@ document.querySelectorAll('.map-choose li').forEach((li, index) => {
 });
 
 
-function createAdjacencyMatrix() {
-    const paths = document.querySelectorAll('.map path');
-    const matrix = Array.from({ length: paths.length }, () => Array(paths.length).fill(0));
 
-    paths.forEach((path, index) => {
-        for (let i = index + 1; i < paths.length; i++) {
-            if (arePathsNear(path, paths[i])) {
-                matrix[index][i] = 1;
-                matrix[i][index] = 1; // Since the adjacency matrix is symmetric
-            }
-        }
-    });
-    return matrix;
-}
-
-function saveMatrixToFile(matrix, name) {
-    const blob = new Blob([JSON.stringify(matrix)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'adjacency_matrix_' + name + '.json';
-    a.click();
-    URL.revokeObjectURL(url);
-}
-
-document.getElementById('button1').addEventListener('click', () => {
-    let matrix = createAdjacencyMatrix();
-    const index = localStorage.getItem('selectedIndex');
-    saveMatrixToFile(matrix, index);
-});
-
-
-
+// Button event listeners
 document.querySelectorAll('.pallete div').forEach(pallete => {
-    pallete.addEventListener('click', () => {
-        const color = window.getComputedStyle(pallete).backgroundColor;
-        console.log(color);
-        localStorage.setItem('selectedColor', color);
+	pallete.addEventListener('click', () => {
+		const color = window.getComputedStyle(pallete).backgroundColor;
+		localStorage.setItem('selectedColor', color);
 
-        // Remove border from all palette divs
-        document.querySelectorAll('.pallete div').forEach(p => {
-            p.style.border = 'none';
-        });
+		// Remove border from all palette divs
+		document.querySelectorAll('.pallete div').forEach(p => {
+			p.style.border = 'none';
+		});
 
-        // Add border to the selected palette div
-        pallete.style.border = '3px solid black';
-    });
+		// Add border to the selected palette div
+		pallete.style.border = '3px solid black';
+
+		
+	});
 });
 
+document.addEventListener('DOMContentLoaded', () => {
+	localStorage.clear();
+	const firstLi = document.querySelector('.map-choose li');
+	if (firstLi) {
+		firstLi.click();
+	}
+	
+});
 
-function isMapFullyColored() {
-    const mapPaths = document.querySelectorAll('.map path');
-    const defaultColor = 'rgb(204, 204, 204)';
+// document.getElementById('button1').addEventListener('click', () => {
+//     let matrix = createAdjacencyMatrix();
+//     const index = localStorage.getItem('selectedIndex');
+//     saveMatrixToFile(matrix, index);
+// });
 
-    for (let path of mapPaths) {
-        if (window.getComputedStyle(path).fill === defaultColor) {
-            return false;
-        }
-    }
-    return true;
-}
-
-
-
-
-
-function arePathsNear(path1, path2, threshold = 5) {
-    if (!path1 || !path2) {
-        return false;
-    }
-
-    // Hàm để chuyển dữ liệu path thành một danh sách các điểm (x, y)
-    function getPathPoints(path) {
-        const length = path.getTotalLength();
-        const numPoints = Math.ceil(length / 2); // Số lượng điểm cần lấy (tăng hoặc giảm nếu cần)
-        const points = [];
-
-        for (let i = 0; i <= numPoints; i++) {
-            const point = path.getPointAtLength((i / numPoints) * length);
-            points.push({ x: point.x, y: point.y });
-        }
-
-        return points;
-    }
-
-    // Hàm để tính khoảng cách Euclidean giữa hai điểm
-    function getDistance(point1, point2) {
-        const dx = point1.x - point2.x;
-        const dy = point1.y - point2.y;
-        return Math.sqrt(dx * dx + dy * dy);
-    }
-
-    const points1 = getPathPoints(path1);
-    const points2 = getPathPoints(path2);
-
-    // Kiểm tra khoảng cách giữa các điểm
-    for (const p1 of points1) {
-        for (const p2 of points2) {
-            if (getDistance(p1, p2) < threshold) {
-                return true; // Hai path được coi là kề nhau
-            }
-        }
-    }
-
-    return false; // Không có điểm nào gần nhau
-}
-
-
-
-
-// function arePathsNear(path1, path2) {
-//     if (!path1 || !path2) {
-//         return false;
+// document.getElementById('button2').addEventListener('click', () => {
+//     const index = localStorage.getItem('selectedIndex');
+//     if (index !== null) {
+//         logNearbyPaths(index);
+//     } else {
+//         console.error('No color index found in localStorage');
 //     }
-
-//     const rect1 = path1.getBoundingClientRect();
-//     const rect2 = path2.getBoundingClientRect();
-
-//     const isNear = !(rect1.right < rect2.left ||
-//         rect1.left > rect2.right ||
-//         rect1.bottom < rect2.top ||
-//         rect1.top > rect2.bottom);
-
-//     return isNear;
-// }
-
-function logNearbyPaths(index) {
-    const paths = document.querySelectorAll('.map path');
-    let logContent = '';
-
-    const maxIndex = paths.length;
-    logContent += `${maxIndex}\n\n`;
-
-    paths.forEach((path, index) => {
-        for (let i = index + 1; i < paths.length; i++) {
-            if (arePathsNear(path, paths[i])) {
-                logContent += `${index + 1} ${i + 1}\n`;
-            }
-        }
-    });
-
-    const blob = new Blob([logContent], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `test${index}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-}
-
-function applyColorsFromFile(index) {
-    let filename = `result_${index}.txt`;
-    fetch(filename)
-        .then(response => response.text())
-        .then(data => {
-            const lines = data.trim().split('\n');
-            const colors = [
-				'rgb(86, 0, 139)',
-				'rgb(33, 0, 100)',
-				'rgb(0, 71, 64)',
-				'rgb(0, 139, 23)',
-				'rgb(142, 128, 0)',
-				'rgb(141, 82, 0)',
-				'rgb(139, 0, 0)'
-				
-
-			]; // Define your color palette here
-
-            lines.forEach(line => {
-                const [index, colorNumber] = line.split(' ').map(Number);
-                console.log(index, colorNumber)
-                const path = document.getElementById(index.toString());
-                if (path && colors[colorNumber - 1]) {
-                    path.style.fill = colors[colorNumber - 1];
-                }
-            });
-        })
-        .catch(error => console.error('Error reading the file:', error));
-}
-
-// document.addEventListener('DOMContentLoaded', applyColorsFromFile);
-
-document.getElementById('button2').addEventListener('click', () => {
-    const index = localStorage.getItem('selectedIndex');
-    if (index !== null) {
-        logNearbyPaths(index);
-    } else {
-        console.error('No color index found in localStorage');
-    }
-});
+// });
 
 document.getElementById('button3').addEventListener('click', () => {
     const index = localStorage.getItem('selectedIndex');
@@ -1696,3 +1748,11 @@ document.getElementById('button3').addEventListener('click', () => {
         console.error('No color index found in localStorage');
     }
 });
+
+document.getElementById('button4').addEventListener('click', () => {
+    document.querySelectorAll('.map path').forEach((path, index) => {
+		path.style.fill = 'rgb(204, 204, 204)';
+		updateColorNumber(0);
+	})
+});
+

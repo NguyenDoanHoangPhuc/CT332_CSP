@@ -1,43 +1,205 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
-    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        p {
+            text-align: justify;
+        }
+
+        .container {
+            display: flex;
+
+        }
+
+        .map-container {
+            background-color: #fff;
+            overflow: hidden;
+            width: 100%;
+            /* or specify a fixed width */
+            height: auto;
+            /* or specify a fixed height */
+        }
+
+        .info-container {
+            background-color: #fff;
+            padding: 10px;
+            flex: 1;
+        }
+
+        .map {
+            width: 100%;
+            height: auto;
+        }
+
+        .map-container {
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            width: 100%;
+            height: auto;
+        }
+
+        .info-container {
+            background-color: #fafafa;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            flex: 1;
+        }
+
+        .pallete div {
+            transition: transform 0.3s;
+        }
+
+        .pallete div:hover {
+            transform: scale(1.1);
+        }
+
+        .map-choose li {
+            cursor: pointer;
+            padding: 5px 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+
+        .map-choose li:hover {
+            background-color: #e0e0e0;
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .map-choose {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .map-choose li {
+            cursor: pointer;
+            padding: 10px 20px;
+            margin: 5px 0;
+            border-radius: 8px;
+            transition: background-color 0.3s, transform 0.3s;
+            font-size: 1.2em;
+        }
+
+        .map-choose li:hover {
+            background-color: #e0e0e0;
+            transform: scale(1.05);
+        }
+
+        p {
+            line-height: 1.6;
+        }
+
+        #button3,
+        #button4 {
+            background-color: gray;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.3s;
+            margin: 10px 20px;
+        }
+
+        #button3:hover,
+        #button4:hover {
+            background-color: darkgray;
+            transform: scale(1.05);
+        }
+
+        #color-text {
+            margin: 10px 10px;
+        }
+
+        .map-choose li {
+            display: inline-block;
+            margin-right: 10px;
+            cursor: pointer;
+        }
+    </style>
 </head>
+
 <body>
-    <div class = "pallete" style="display: flex; gap: 10px; padding: 10px;">
-        <div style="width: 50px; height: 50px; background-color: rgb(86, 0, 139); border-radius: 50%;"></div>
-        <div style="width: 50px; height: 50px; background-color: rgb(33, 0, 100); border-radius: 50%;"></div>
-        <div style="width: 50px; height: 50px; background-color: rgb(0, 71, 64); border-radius: 50%;"></div>
-        <div style="width: 50px; height: 50px; background-color: rgb(0, 139, 23); border-radius: 50%;"></div>
-        <div style="width: 50px; height: 50px; background-color: rgb(142, 128, 0); border-radius: 50%;"></div>
-        <div style="width: 50px; height: 50px; background-color: rgb(141, 82, 0); border-radius: 50%;"></div>
-        <div style="width: 50px; height: 50px; background-color: rgb(139, 0, 0); border-radius: 50%;"></div>
 
+    </script>
+    <div class="container">
+        <div class="map-container">
+            <div>
+                <h3 id="color-text">Số màu đã tô: 0</h3>
+                <button id="button3">Hiển thị kết quả</button>
+                <button id="button4">Xóa màu bản đồ</button>
+            </div>
+
+            <svg class="map"></svg>
+        </div>
+        <div class="info-container">
+
+            <h1>Tô màu bản đồ</h1>
+            <p>Nhiệm vụ: hãy tô màu bản đồ sau cho hai khu vực gần nhau không có màu trùng nhau, và số màu sử dụng là ít
+                nhất</p>
+
+            <h3>Chọn quốc gia</h3>
+            <ul class="map-choose">
+                <li id="choose0">Úc</li>
+                <li id="choose1">Hoa Kỳ</li>
+                <li id="choose2">Nam Phi</li>
+                <li id="choose3">Đức</li>
+                <li id="dhoose4">Anh</li>
+            </ul>
+
+            <h3>Chọn màu để tô</h3>
+            <div class="pallete" style="display: flex; gap: 10px; padding: 10px;">
+                <div style="width: 50px; height: 50px; background-color: rgb(86, 0, 139); border-radius: 50%;"></div>
+                <div style="width: 50px; height: 50px; background-color: rgb(33, 0, 100); border-radius: 50%;"></div>
+                <div style="width: 50px; height: 50px; background-color: rgb(0, 71, 64); border-radius: 50%;"></div>
+                <div style="width: 50px; height: 50px; background-color: rgb(0, 139, 23); border-radius: 50%;"></div>
+                <div style="width: 50px; height: 50px; background-color: rgb(142, 128, 0); border-radius: 50%;"></div>
+                <div style="width: 50px; height: 50px; background-color: rgb(141, 82, 0); border-radius: 50%;"></div>
+                <div style="width: 50px; height: 50px; background-color: rgb(139, 0, 0); border-radius: 50%;"></div>
+
+            </div>
+
+
+
+
+        </div>
     </div>
 
-    
-    <ul class="map-choose">
-        <li id="choose0">Úc</li>
-        <li id="choose1">Hoa Kỳ</li>
-        <li id="choose2">Nam Phi</li>
-        <li id="choose3">Đức</li>
-        <li id="dhoose4">Anh</li>
-    </ul>
 
-    <div style="margin: 20px 0;">
-        <button id="button1">Create matrix</button>
-        <button id="button2">Create test</button>
-        <button id="button3">Upload result</button>
-    </div>
-
-    <svg class="map"></svg>
-   
 </body>
 
-<script type="module" src="map_data.js"></script>
 <script src="main.js"></script>
 
 </html>
